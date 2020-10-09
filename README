@@ -1,0 +1,158 @@
+Dumitrescu Ioana-Teodora - 315CD
+
+--------------------------- PART 1: SPARSE JACOBI ----------------------------
+
+Timp de rulare: ~82 secunde
+
+ 1. generate_probabilities_system
+
+ 	Pentru a completa vectorul b, observ ca acesta are 1 doar pe ultimele "rows"
+ 	pozitii pentru ca numarul de valori de pe un rand este egal cu numarul
+ 	randului
+
+    Pentru a completa matricea, am observat ca pe diagonala este pus numarul de
+    intersectii corespunzator elementului cu indicele randului:
+    - colturile triunghiului au 4 intersectii
+    - numerele din mijloc au 6 intersectii 
+    - elementele de pe margine(fara colturi) au 5 intersectii
+    Pornind de la primul element, pun -1 pe pozitiile Aij si Aji atunci cand
+    intre elemtnul i si elemetnul j exista o legatura in triunghi. De asemenea
+    fac acest lucru si pentru legaturile dintre un element si elementul din
+    stanga si dreapta sa de pe randul urmator
+    Pentru a completa corect, tin minte mereu primul si ultimul element de pe 
+    randul respectiv.
+ 
+ 2. matrix_to_csr
+
+	Pentru a identifica valorile ce trebuie puse in vectorii "values", "colind" 
+    si "rowptr", parcurg matricea prin doua "for"-uri. In mometul intalnirii
+    unui element nenul, acesta este adaugat in "values", coloana curenta este 
+    adaugata in "colind", iar pentru a verifica daca este primul element de pe 
+    o linie, am pus folosit o variabila initializata cu zero la fiecare rand.
+    Valoarea acestia este modificata la 1 in momentul intalnirii primului 
+    element, astfel adaugandu-se in rowptr pozitia curenta din values doar o data
+    (pt primul element).
+
+ 3. Jacobi_factorization
+
+	M-am folosit de formulele specifice metodei Jacobi pentru matricea si
+    vectorul de iteratie. Astfel, am gasit N-ul prin obtinerea matricii diagonale
+    aferente matricii A, precum si P-ul  prin scaderea lui A din N.
+    Apoi am inlocuit in formula cu cele obtinute mai sus (folosind functia "inv"
+    pentru inversarea matricii N).
+
+ 
+ 4. Jacobi_sparse
+
+	Voi tine solutia de la pasul curent si solutia de la pasul anterior in doi
+    vectori ("x" si "x_prev"). Pe x_prev il initializez cu 0 (solutia initiala).
+    Aplic formula de iteratie pentru solutia urmatoare (folosindu-ma de matricea
+    si vectorul de iteratie, precum si de functia "csr_multiplication") si repet 
+    procedeul, pana cand eroarea (diferenta dintre olutia curenta si precedenta)
+    devine mai mica decat toleranta data.
+
+------------------------------ PART 2: K-MEANS -------------------------------
+
+Timp de rulare: ~7 secunde
+
+ 1. clustering_pc
+
+ 	Pentru a gasi centroizii, le-am dat valoarea initiala 0, apoi am luat un 
+ 	vector auxiliar "pairs_point_cluster" in care am pus la indicele fiecarui
+ 	punct, indicele pereche al clusterului din care acesta ar trebui sa faca 
+ 	parte.
+ 	Apoi formez centroizii ca valoare, adunand valorile punctelor in 
+ 	clusterul aferent lor si numarand cate puncte sunt in fiecare cluster, apoi
+ 	impartind pentru a forma media.
+ 	Iau fiecare punct si calculez distanta fata de fiecare centroid, indicele
+ 	centroidului aferent distantei minime fiind salbvat in vectorul auxiliar la
+ 	pozitia punctului respectiv.
+ 	Procedeul se repeta pana cand diferenta dintre centroizii de la pasul curent
+ 	si pasul precedent este mai mica decat eroarea permisa. 
+
+ 2. compute_cost_pc
+
+ 	Calculez ca la functia precedenta, distanta de la fiecare punct la fiecare 
+ 	centroid pentru a o gasi pe cea minima si pentru a realiza perechile dintre
+ 	puncte si centroid in vectorul auxiliar "pairs_point_centroid".
+ 	Pentru a calcula costul, am folosit o vectorizare, formand o matrice auxiliara
+ 	de dimensiunea celei de puncte in care punem centroizii corespunzatori
+ 	fiecarei linii, apoi am calculat norma pentru cele doua matrici si am adunat
+ 	rezultatul in variabila de cost.
+
+----------------------- PART 3: HOUSEHOLDER PREDICTION -----------------------
+
+Timp de rulare: ~28 secunde
+Acuratete de predictie obtinuta: intre ~0,85 - 0,88
+
+ 1. rgbHistogram
+
+    Citesc imaginea sub forma de matrice tridimensionala, apoi tabloul aferent
+    fiecarei culori e transformat in vector si ii este aplicata functia 'histc'
+    cu intervalele formate de punctele date. Vectorii obtinuti se concateneaza 
+    pentru a forma vectorul solutie.
+
+ 2. hsvHistogram
+
+    Aplic acelasi algoritm ca la functia precedenta (pe intervalul [0,1]), dar
+    folosesc o functie auxiliara "rgbHsvTransform" implementata dupa modelul
+    prezentat, insa vectorizata pentru a nu mai fi nevoie de parcurgerea matricii
+    pixel cu pixel (lucru care consuma foarte mult timp, mai ales pentru un numar
+    mare de imagini procesate). Astfel, am lucrat cu toata matricea deodata, 
+    realizand transformarile pe toti pixelii care indeplineau conditia necesara,
+    in mod simultan.
+    
+ 3. Householder
+
+    Pentru factorizarea cu Householder folosesc unul din algoritmii de la labo-
+    rator, de pe Moodle, care urmareste formulele specifice acestei factorizari.
+
+ 4. SST
+
+    Deoarece este vorba de o matrice superior triunghiulara, cel mai usor de 
+    calculat element este cel de pe ultimul rand, pe care il aflam impartind 
+    termenul liber la coeficientul sau. Restul necunoscutelor se afla cate una pe
+    fiecare rand, din aproape in aproape, obtinandu-se prin scaderea din termenul
+    liber a celorlalti termeni prezenti pe rand (aflati la pasul anterior) si
+    impartirea cu coeficientul sau.
+
+ 5. preprocess
+
+    Salvez in doua variabile cale catre cele doua foldere cu imagini, apoi obtin
+    doua matrici cu imaginile din cele doua foldere. calculez histograma ceruta
+    pentru fiecare imagine din cele doua si adaug la rand vectorul de caracteristici
+    obtinut in matricea X (intai pozele cu pisici, apoi pozele fara pisici). La
+    fiecare pas, adaug si in y 1 sau -1 daca contine pisici sau nu poza respectiva.
+
+ 6. learn
+
+    Adaug o coloana de 1 la sfarsitul matricii X primite ca parametru, apoi
+    folosesc Householder si SST implementate anterior pentru a rezolva sistemul
+    de ecuatii necesar "invatarii" lui w.
+
+ 7. evaluate
+
+    Pentru rezolvarea acestei functii, folosesc functia "preprocess" pentru a
+    obtine matricea si vectorul de caracteristici aferent setului de imagini.
+    Pentru fiecare poza, voi folosi produsul scalar cu w ul gasit anterior,
+    obtinand astfel y ul prezis. Compar valoarea obtinuta cu cea din preprocess
+    si, daca produsul celor doua valori este mai mare ca 0, atunci inseamna ca
+    au acelasi semn, deci raspunsul este corect.
+
+-------------------- PART 4: GRADIENT DESCENT PREDICTION ---------------------
+
+Timp de rulare: ~110 - 120s
+Acuratete de predictie obtinuta: ~0,60-0,63
+
+ 1. learn
+
+    Initializez cu ajutorul functiei "rand" vectorul w u valori intre [-0.1,0.1],
+    scalez coloanele lui X si il formz pe X_tilde. Folosesc, apoi, functia 
+    "randperm" pentru a obtine valori intregi random intre 1 si numarul de linii 
+    ale lui X, valori ce vor fi considerate indicii random ai liniilor din X si
+    y pentru batch. Apoi folosesc formula data pentru a-l obtine pe w.
+
+ 2. evaluate
+
+    Functia este aproape identica celei de la task-ul precedent, adaugandu-se
+    doar scalarea coloanelor lui X.
